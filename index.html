@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PastKeys · Domina los verbos en inglés</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c111f;
+    --panel:#151c30;
+    --panel-2:#1b2440;
+    --line:#28324f;
+    --text:#eef1fa;
+    --muted:#8d97b8;
+    --accent:#ffc15e;
+    --accent-ink:#231a05;
+    --ok:#3fd6a3;
+    --bad:#ff6b7a;
+    --key-top:#232e4e;
+    --key-side:#101728;
+    --radius:14px;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+    --sans:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    background-image:radial-gradient(ellipse 80% 50% at 50% -10%,#1a2342 0%,transparent 60%);
+    color:var(--text);
+    font-family:var(--sans);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100dvh;
+  }
+  .wrap{width:100%;max-width:560px;padding:20px 16px 32px;flex:1;display:flex;flex-direction:column}
+  header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px}
+  .logo{font-family:var(--mono);font-weight:800;font-size:1.25rem;letter-spacing:-.02em}
+  .logo em{font-style:normal;color:var(--accent)}
+  .logo .cursor{display:inline-block;width:.55em;height:1.05em;background:var(--accent);vertical-align:-0.15em;margin-left:2px;animation:blink 1.1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .tag{color:var(--muted);font-size:.78rem}
+
+  /* ---------- pantalla: niveles ---------- */
+  .screen{display:none;flex-direction:column;flex:1}
+  .screen.active{display:flex}
+  h1{font-size:1.35rem;font-weight:700;margin-bottom:4px}
+  .sub{color:var(--muted);font-size:.88rem;margin-bottom:16px;line-height:1.45}
+  .levels{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .lvl{
+    aspect-ratio:1;border:1px solid var(--line);border-radius:10px;background:var(--panel);
+    color:var(--text);font-family:var(--mono);font-size:.95rem;font-weight:600;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    transition:transform .08s,border-color .15s;
+  }
+  .lvl small{font-size:.58rem;color:var(--muted);font-weight:400}
+  .lvl:not(.locked):hover{border-color:var(--accent);transform:translateY(-2px)}
+  .lvl.done{border-color:var(--ok)}
+  .lvl.done small{color:var(--ok)}
+  .lvl.locked{opacity:.35;cursor:not-allowed}
+  .lvl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .legend{display:flex;gap:16px;color:var(--muted);font-size:.75rem;margin-top:14px}
+  .legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .legend .l-ok::before{background:var(--ok)}
+  .legend .l-lock::before{background:var(--line)}
+
+  /* ---------- pantalla: juego ---------- */
+  .hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:.82rem;color:var(--muted)}
+  .hud b{color:var(--text);font-family:var(--mono)}
+  .dots{display:flex;gap:7px;justify-content:center;margin:10px 0 26px}
+  .dot{width:11px;height:11px;border-radius:50%;background:var(--line);transition:background .2s,box-shadow .2s}
+  .dot.hit{background:var(--ok);box-shadow:0 0 8px rgba(63,214,163,.6)}
+  .dot.miss{background:var(--bad);box-shadow:0 0 8px rgba(255,107,122,.55)}
+  .dot.now{background:var(--accent);box-shadow:0 0 8px rgba(255,193,94,.6)}
+
+  .ask{
+    text-align:center;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:14px;font-weight:500;
+  }
+  .keycaps{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;min-height:58px}
+  .cap{
+    font-family:var(--mono);font-weight:800;font-size:1.5rem;text-transform:uppercase;
+    background:linear-gradient(180deg,var(--key-top),var(--panel-2));
+    border:1px solid var(--line);border-bottom:4px solid var(--key-side);
+    border-radius:9px;padding:8px 11px;min-width:46px;text-align:center;
+    animation:pop .18s ease both;
+  }
+  @keyframes pop{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
+  .meaning{text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:22px;min-height:1.2em}
+
+  .answer{
+    width:100%;font-family:var(--mono);font-size:1.45rem;font-weight:600;text-align:center;
+    background:var(--panel);border:2px solid var(--line);border-radius:var(--radius);
+    color:var(--text);padding:15px 14px;caret-color:var(--accent);
+  }
+  .answer:focus{outline:none;border-color:var(--accent)}
+  .answer.good{border-color:var(--ok);color:var(--ok)}
+  .answer.wrong{border-color:var(--bad);color:var(--bad);animation:shake .3s}
+  @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  .feedback{min-height:74px;margin-top:14px;text-align:center;font-size:.95rem;line-height:1.5}
+  .feedback .big{font-family:var(--mono);font-weight:600}
+  .feedback .ok-t{color:var(--ok)}
+  .feedback .bad-t{color:var(--bad)}
+  .feedback .forms{color:var(--muted);font-size:.85rem}
+
+  .row{display:flex;gap:10px;margin-top:14px}
+  button.primary,button.ghost{
+    flex:1;padding:14px;border-radius:var(--radius);font-family:var(--sans);
+    font-size:1rem;font-weight:700;cursor:pointer;border:1px solid var(--line);
+  }
+  button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  button.primary:active{transform:translateY(1px)}
+  button.ghost{background:transparent;color:var(--muted)}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .kb-toggle{
+    margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px;
+    color:var(--muted);font-size:.8rem;cursor:pointer;user-select:none;
+  }
+  .kb-toggle input{accent-color:var(--accent);width:16px;height:16px}
+
+  /* ---------- teclado seguro en pantalla ---------- */
+  .kb{display:none;margin-top:12px;user-select:none}
+  .kb.on{display:block}
+  .kb-row{display:flex;justify-content:center;gap:5px;margin-bottom:6px}
+  .kb button{
+    font-family:var(--mono);font-size:1.05rem;font-weight:600;color:var(--text);
+    background:linear-gradient(180deg,var(--key-top),var(--panel-2));
+    border:1px solid var(--line);border-bottom:3px solid var(--key-side);
+    border-radius:7px;min-width:9.2%;padding:11px 0;cursor:pointer;
+  }
+  .kb button:active{transform:translateY(1px);border-bottom-width:1px}
+  .kb button.wide{min-width:15%}
+
+  /* ---------- pantalla: resultado ---------- */
+  .result{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px}
+  .score{font-family:var(--mono);font-size:3.4rem;font-weight:800}
+  .score.pass{color:var(--ok)}
+  .score.fail{color:var(--bad)}
+  .result p{color:var(--muted);max-width:34ch;line-height:1.5}
+  .result .row{width:100%;max-width:360px}
+
+  @media (max-width:400px){
+    .cap{font-size:1.25rem;min-width:40px;padding:7px 9px}
+    .kb button{font-size:.95rem;padding:10px 0}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">Past<em>Keys</em><span class="cursor"></span></div>
+    <div class="tag">500 verbos · 50 niveles</div>
+  </header>
+
+  <!-- ═════════ NIVELES ═════════ -->
+  <section id="screen-levels" class="screen active">
+    <h1>Elige nivel</h1>
+    <p class="sub">Cada nivel añade los 10 verbos siguientes más usados del inglés. Responde 10 preguntas por ronda; acierta 8 o más para desbloquear el siguiente.</p>
+    <div class="levels" id="levels"></div>
+    <div class="legend"><span class="l-ok">superado</span><span class="l-lock">bloqueado</span></div>
+  </section>
+
+  <!-- ═════════ JUEGO ═════════ -->
+  <section id="screen-game" class="screen">
+    <div class="hud">
+      <span>Nivel <b id="hud-level">1</b> · verbos 1–<b id="hud-pool">10</b></span>
+      <span>Aciertos <b id="hud-score">0</b>/10</span>
+    </div>
+    <div class="dots" id="dots"></div>
+
+    <div class="ask" id="ask">Escribe el pasado simple</div>
+    <div class="keycaps" id="keycaps"></div>
+    <div class="meaning" id="meaning"></div>
+
+    <input id="answer" class="answer" type="text"
+           autocomplete="off" autocorrect="off" autocapitalize="none"
+           spellcheck="false" inputmode="latin" enterkeyhint="done"
+           data-gramm="false" data-lpignore="true" name="pk-x91f"
+           placeholder="escribe aquí…" aria-label="Tu respuesta">
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="row">
+      <button class="ghost" id="btn-quit" type="button">Salir</button>
+      <button class="primary" id="btn-main" type="button">Comprobar</button>
+    </div>
+
+    <label class="kb-toggle">
+      <input type="checkbox" id="kb-switch">
+      Teclado seguro (bloquea el autocorrector del móvil)
+    </label>
+
+    <div class="kb" id="kb" aria-hidden="true"></div>
+  </section>
+
+  <!-- ═════════ RESULTADO ═════════ -->
+  <section id="screen-result" class="screen">
+    <div class="result">
+      <div class="score" id="r-score">8/10</div>
+      <h1 id="r-title">¡Nivel superado!</h1>
+      <p id="r-text"></p>
+      <div class="row">
+        <button class="ghost" id="r-menu" type="button">Niveles</button>
+        <button class="primary" id="r-next" type="button">Siguiente</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="verbs.js"></script>
+<script>
+"use strict";
+/* ══════════════ configuración ══════════════ */
+const QS_PER_LEVEL = 10;      // preguntas por ronda
+const PASS_SCORE   = 8;       // aciertos para desbloquear
+const TOP_POOL     = 25;      // a partir del nivel 4, las 2 primeras preguntas
+const TOP_FROM_LVL = 4;       // salen de los 25 verbos más usados
+const N_LEVELS     = Math.ceil(VERBS.length / QS_PER_LEVEL); // 50
+
+/* ══════════════ almacenamiento (con fallback en memoria) ══════════ */
+const store = (() => {
+  let mem = {};
+  const ok = (() => { try { localStorage.setItem("_t","1"); localStorage.removeItem("_t"); return true; } catch { return false; } })();
+  return {
+    get(k, d){ try { return ok ? (JSON.parse(localStorage.getItem(k)) ?? d) : (mem[k] ?? d); } catch { return d; } },
+    set(k, v){ try { ok ? localStorage.setItem(k, JSON.stringify(v)) : (mem[k]=v); } catch { mem[k]=v; } }
+  };
+})();
+let progress = store.get("pk-progress", { unlocked: 1, best: {} });
+
+/* ══════════════ utilidades ══════════════ */
+const $ = id => document.getElementById(id);
+const shuffle = a => { for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const sample  = (arr,n) => shuffle(arr.slice()).slice(0,n);
+const norm    = s => s.toLowerCase().trim().replace(/\s+/g," ");
+
+function show(screen){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(screen).classList.add("active");
+}
+
+/* ══════════════ pantalla de niveles ══════════════ */
+function renderLevels(){
+  const grid = $("levels");
+  grid.innerHTML = "";
+  for (let n=1; n<=N_LEVELS; n++){
+    const b = document.createElement("button");
+    b.className = "lvl";
+    b.type = "button";
+    const best = progress.best[n];
+    if (n > progress.unlocked) b.classList.add("locked");
+    if (best >= PASS_SCORE) b.classList.add("done");
+    b.innerHTML = `${n}<small>${best!=null ? best+"/10" : "1–"+Math.min(n*10,VERBS.length)}</small>`;
+    if (n <= progress.unlocked) b.addEventListener("click", ()=>startLevel(n));
+    else b.disabled = true;
+    grid.appendChild(b);
+  }
+}
+
+/* ══════════════ construcción de la ronda ══════════════ */
+function buildRound(level){
+  const pool = VERBS.slice(0, Math.min(level*QS_PER_LEVEL, VERBS.length));
+  let picked;
+  if (level >= TOP_FROM_LVL){
+    // Las 2 primeras preguntas: verbos aleatorios del top 25.
+    const top = sample(pool.slice(0, TOP_POOL), 2);
+    const rest = sample(pool.filter(v => !top.includes(v)), QS_PER_LEVEL - 2);
+    picked = [...top, ...rest];
+  } else {
+    picked = sample(pool, QS_PER_LEVEL);
+  }
+  // Cada pregunta pide pasado simple o participio al azar.
+  return picked.map(v => ({ v, mode: Math.random() < 0.5 ? "p" : "pp" }));
+}
+
+/* ══════════════ estado del juego ══════════════ */
+let game = null;
+
+function startLevel(level){
+  game = { level, qs: buildRound(level), i: 0, score: 0, phase: "ask" };
+  $("hud-level").textContent = level;
+  $("hud-pool").textContent  = Math.min(level*QS_PER_LEVEL, VERBS.length);
+  renderDots();
+  show("screen-game");
+  renderQuestion();
+}
+
+function renderDots(){
+  const d = $("dots");
+  d.innerHTML = "";
+  for (let i=0;i<QS_PER_LEVEL;i++){
+    const s = document.createElement("span");
+    s.className = "dot" + (i===game.i ? " now" : "");
+    d.appendChild(s);
+  }
+}
+
+function renderQuestion(){
+  const q = game.qs[game.i];
+  $("ask").textContent = q.mode==="p" ? "Escribe el pasado simple" : "Escribe el participio pasado";
+  const caps = $("keycaps");
+  caps.innerHTML = "";
+  [...q.v.b].forEach((ch,idx)=>{
+    const c = document.createElement("span");
+    c.className = "cap";
+    c.textContent = ch;
+    c.style.animationDelay = (idx*0.03)+"s";
+    caps.appendChild(c);
+  });
+  $("meaning").textContent = q.v.es + (q.v.i ? " · irregular" : " · regular");
+  $("hud-score").textContent = game.score;
+  $("feedback").innerHTML = "";
+  const inp = $("answer");
+  inp.value = "";
+  inp.className = "answer";
+  $("btn-main").textContent = "Comprobar";
+  game.phase = "ask";
+  renderDots();
+  focusInput();
+}
+
+function checkAnswer(){
+  const q = game.qs[game.i];
+  const accepted = q.v[q.mode].map(norm);
+  const given = norm($("answer").value);
+  if (!given) { focusInput(); return; }
+  const good = accepted.includes(given);
+  const inp = $("answer");
+  const fb = $("feedback");
+  const allForms = `${q.v.b} → ${q.v.p.join(" / ")} → ${q.v.pp.join(" / ")}`;
+  if (good){
+    game.score++;
+    inp.classList.add("good");
+    fb.innerHTML = `<div class="big ok-t">✓ ¡Correcto!</div><div class="forms">${allForms}</div>`;
+    $("dots").children[game.i].className = "dot hit";
+  } else {
+    inp.classList.add("wrong");
+    const right = q.v[q.mode].join(" / ");
+    fb.innerHTML = `<div class="big bad-t">✗ Era: ${right}</div><div class="forms">${allForms}</div>`;
+    $("dots").children[game.i].className = "dot miss";
+  }
+  $("hud-score").textContent = game.score;
+  $("btn-main").textContent = game.i === QS_PER_LEVEL-1 ? "Ver resultado" : "Siguiente";
+  game.phase = "next";
+  inp.blur();
+  $("btn-main").focus();
+}
+
+function nextQuestion(){
+  if (game.i === QS_PER_LEVEL-1){ endRound(); return; }
+  game.i++;
+  renderQuestion();
+}
+
+function endRound(){
+  const pass = game.score >= PASS_SCORE;
+  const prevBest = progress.best[game.level] ?? -1;
+  if (game.score > prevBest) progress.best[game.level] = game.score;
+  if (pass && game.level === progress.unlocked && progress.unlocked < N_LEVELS){
+    progress.unlocked++;
+  }
+  store.set("pk-progress", progress);
+
+  $("r-score").textContent = game.score + "/10";
+  $("r-score").className = "score " + (pass ? "pass" : "fail");
+  $("r-title").textContent = pass ? "¡Nivel superado!" : "Casi…";
+  $("r-text").textContent = pass
+    ? (game.level < N_LEVELS ? `Has desbloqueado el nivel ${game.level+1}. Cada nivel suma 10 verbos nuevos al mazo.` : "¡Has completado los 500 verbos! Eres imparable.")
+    : `Necesitas ${PASS_SCORE} aciertos para avanzar. Repite el nivel: los verbos que fallas son los que más se aprenden.`;
+  $("r-next").textContent = pass && game.level < N_LEVELS ? "Siguiente nivel" : "Reintentar";
+  show("screen-result");
+  renderLevels();
+}
+
+/* ══════════════ teclado seguro (anti-autocorrector) ══════════════ */
+const KB_ROWS = ["qwertyuiop","asdfghjkl","zxcvbnm"];
+function buildKb(){
+  const kb = $("kb");
+  KB_ROWS.forEach((row,ri)=>{
+    const div = document.createElement("div");
+    div.className = "kb-row";
+    if (ri===2){
+      const del = keyBtn("⌫","wide",()=>{ const i=$("answer"); i.value=i.value.slice(0,-1); });
+      div.appendChild(del);
+    }
+    [...row].forEach(ch => div.appendChild(keyBtn(ch,"",()=>{ $("answer").value += ch; })));
+    if (ri===2){
+      const ok = keyBtn("↵","wide",()=>mainAction());
+      div.appendChild(ok);
+    }
+    kb.appendChild(div);
+  });
+}
+function keyBtn(label, cls, fn){
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = label;
+  if (cls) b.className = cls;
+  b.addEventListener("pointerdown", e => { e.preventDefault(); fn(); });
+  return b;
+}
+function setKb(on){
+  $("kb").classList.toggle("on", on);
+  $("kb").setAttribute("aria-hidden", String(!on));
+  const inp = $("answer");
+  // readonly = el teclado nativo del móvil no se abre ⇒ imposible que autocorrija
+  inp.readOnly = on;
+  store.set("pk-kb", on);
+  focusInput();
+}
+function focusInput(){
+  if (game && game.phase === "ask" && !$("answer").readOnly) $("answer").focus();
+}
+
+/* ══════════════ eventos ══════════════ */
+function mainAction(){ game.phase === "ask" ? checkAnswer() : nextQuestion(); }
+$("btn-main").addEventListener("click", mainAction);
+$("btn-quit").addEventListener("click", ()=>{ renderLevels(); show("screen-levels"); });
+$("answer").addEventListener("keydown", e => { if (e.key==="Enter"){ e.preventDefault(); mainAction(); } });
+document.addEventListener("keydown", e => {
+  if (e.key==="Enter" && game && game.phase==="next" && $("screen-game").classList.contains("active")){
+    e.preventDefault(); nextQuestion();
+  }
+});
+$("kb-switch").addEventListener("change", e => setKb(e.target.checked));
+$("r-menu").addEventListener("click", ()=>{ renderLevels(); show("screen-levels"); });
+$("r-next").addEventListener("click", ()=>{
+  const pass = game.score >= PASS_SCORE;
+  startLevel(pass && game.level < N_LEVELS ? game.level+1 : game.level);
+});
+
+/* ══════════════ arranque ══════════════ */
+buildKb();
+const kbPref = store.get("pk-kb", false);
+$("kb-switch").checked = kbPref;
+setKb(kbPref);
+renderLevels();
+</script>
+</body>
+</html>
