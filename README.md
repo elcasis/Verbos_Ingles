@@ -6,6 +6,7 @@ Juego web para memorizar el **pasado simple** y el **participio pasado** de los 
 
 - El juego te muestra un verbo en presente (infinitivo) y te pide su **pasado simple** o su **participio pasado**, al azar.
 - Escribes la respuesta y pulsas Enter (o «Comprobar»).
+- Si fallas, se muestra la forma correcta y **debes escribirla bien para poder continuar** (el acierto solo cuenta si lo escribes bien a la primera).
 - Cada nivel tiene **10 preguntas**. Con **8 aciertos o más** desbloqueas el siguiente nivel.
 
 ## Sistema de niveles (50 niveles)
